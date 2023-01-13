@@ -14,7 +14,21 @@ Globals:
     TracingEnabled: true
 
 Resources:
-  HelloWorldFunction:
+  DragonTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: "dragons"
+      AttributeDefinitions:
+        - AttributeName: "dragon_id"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "dragon_id"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+
+  DragonFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: dragons_api/
@@ -22,5 +36,33 @@ Resources:
       Runtime: python3.9
       Architectures:
       - x86_64
+      Environment:
+        Variables:
+          ENDPOINT_OVERRIDE: url
+          TABLE_NAME: dragons
+          AWS_SAM_LOCAL: 0
+
       Events:
+        ListDragons:
+          Type: Api
+          Properties:
+            Path: /dragons
+            Method: get
+
+        CreateDragon:
+          Type: Api
+          Properties:
+            Path: /dragons
+            Method: post
+
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DragonTable
+
 Outputs:
+  DragonFunction:
+    Description: "Dragon Lambda Function ARN"
+    Value: !GetAtt DragonFunction.Arn
+  DragonFunctionIamRole:
+    Description: "Implicit IAM Role created for Dragon function"
+    Value: !GetAtt DragonFunctionRole.Arn

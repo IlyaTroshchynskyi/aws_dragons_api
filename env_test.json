@@ -1,0 +1,8 @@
+{
+
+  "DragonFunction": {
+    "ENDPOINT_OVERRIDE": "http://dynamodb:8000",
+    "TABLE_NAME": "dragons_test_table",
+    "AWS_SAM_LOCAL": 1
+  }
+}
