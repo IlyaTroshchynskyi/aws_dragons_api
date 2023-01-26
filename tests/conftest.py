@@ -32,6 +32,7 @@ def create_dragon(create_test_table):
         "breed": "Standard Western Dragon",
         "danger_rating": "4",
         "description": "Cute dragon that eats babies",
+        "username": "1",
     }
     ddb = boto3.resource("dynamodb", endpoint_url="http://localhost:8000")
     table = ddb.Table("dragons_test_table")

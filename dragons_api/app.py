@@ -23,9 +23,12 @@ def lambda_handler(event, context):
     api = DragonApi(table)
     method = event.get("httpMethod")
     resource = event.get("resource")
+    logger.debug(event)
     if method == "GET" and resource == "/dragons":
-        logger.debug(event)
         return api.get_dragons()
     if method == "POST" and resource == "/dragons":
         body = json.loads(event.get("body"))
-        return api.create_dragon(body)
+        user_name = (
+            event.get("requestContext").get("authorizer").get("claims").get("sub")
+        )
+        return api.create_dragon(body, user_name)

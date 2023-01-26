@@ -12,7 +12,7 @@ class DecimalEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-def json_response(data: dict, response_code=200) -> dict:
+def json_response(data, response_code=200) -> dict:
     """
     Build response for lambda functions
     """

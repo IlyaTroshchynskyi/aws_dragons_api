@@ -1,4 +1,10 @@
+import json
+import os
+from pathlib import Path
+
 import requests
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def test_get_lambda_handler(create_test_table, create_dragon):
@@ -7,21 +13,20 @@ def test_get_lambda_handler(create_test_table, create_dragon):
     assert response.json() == [create_dragon]
 
 
-def test_create_dragon(create_test_table, monkeypatch):
-
-    response = requests.post(
-        "http://127.0.0.1:3000/dragons",
-        json={
-            "name": "Carl Junior_test",
-            "breed": "Standard Western Dragon",
-            "danger_rating": "4",
-            "description": "Cute dragon that eats babies",
-        },
+def test_create_dragon(create_test_table):
+    response = os.popen(
+        f'sam local invoke "DragonFunction" -e {BASE_DIR}/events/create_dragon_data.json  '
+        f"--template-file {BASE_DIR}/template.yaml "
+        f"--env-vars {BASE_DIR}/env.json  "
+        f"--docker-network dragons"
     )
-    assert response.status_code == 201
-    assert response.json().get("dragon_id")
-    assert response.json().get("created_at")
-    assert response.json().get("name") == "Carl Junior_test"
-    assert response.json().get("breed") == "Standard Western Dragon"
-    assert response.json().get("danger_rating") == "4"
-    assert response.json().get("description") == "Cute dragon that eats babies"
+    data = json.loads(response.read())
+    body = json.loads(data.get("body"))
+    assert data.get("statusCode") == 201
+    assert body.get("dragon_id")
+    assert body.get("created_at")
+    assert body.get("name") == "Carl Junior1_test"
+    assert body.get("breed") == "Standard Western Dragon"
+    assert body.get("danger_rating") == "5"
+    assert body.get("description") == "Cute dragon that eats babies"
+    assert body.get("username") == "1"

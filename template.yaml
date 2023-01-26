@@ -28,37 +28,6 @@ Resources:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
 
-#  DragonApi:
-#    Type: AWS::Serverless::Api
-#    Properties:
-#      StageName: Prod
-#      Cors: "'*'"
-#      Auth:
-#        DefaultAuthorizer: DragonCognitoUserPool
-#        Authorizers:
-#          DragonCognitoUserPool:
-#            UserPoolArn: !GetAtt DragonCognitoUserPool.Arn
-#
-#    DragonCognitoUserPool:
-#      Type: AWS::Cognito::UserPool
-#      Properties:
-#        UserPoolName: !Ref CognitoUserPoolName
-#        Policies:
-#          PasswordPolicy:
-#            MinimumLength: 8
-#        UsernameAttributes:
-#          - email
-#        Schema:
-#          - AttributeDataType: String
-#            Name: email
-#            Required: false
-#
-#    DragonUserPoolClient:
-#      Type: AWS::Cognito::UserPoolClient
-#      Properties:
-#        UserPoolId: !Ref DragonCognitoUserPool
-#        ClientName: !Ref CognitoUserPoolClientName
-
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
@@ -148,19 +117,17 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref DragonApi
-            Auth:
-              Authorizer: CognitoAuthorizer
             Path: /dragons
             Method: get
 
-#        CreateDragon:
-#          Type: Api
-#          Properties:
-#            RestApiId: !Ref DragonApi
-#            Auth:
-#              Authorizer: CognitoAuthorizer
-#            Path: /dragons
-#            Method: post
+        CreateDragon:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DragonApi
+            Auth:
+              Authorizer: CognitoAuthorizer
+            Path: /dragons
+            Method: post
 
       Policies:
         - DynamoDBCrudPolicy:
