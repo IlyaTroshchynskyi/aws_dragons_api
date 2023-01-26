@@ -38,7 +38,7 @@ Resources:
       - x86_64
       Environment:
         Variables:
-          ENDPOINT_OVERRIDE: url
+          DYNAMODB_ENDPOINT: url
           TABLE_NAME: dragons
           AWS_SAM_LOCAL: 0
 

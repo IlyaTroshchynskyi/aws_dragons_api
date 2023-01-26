@@ -7,10 +7,12 @@ from api import DragonApi
 
 
 if int(os.environ.get("AWS_SAM_LOCAL", "")):
-    ddb = boto3.resource("dynamodb", endpoint_url=os.environ.get("ENDPOINT_OVERRIDE"))
+    ddb = boto3.resource(
+        "dynamodb", endpoint_url=os.environ.get("DYNAMODB_ENDPOINT", "test")
+    )
 else:
     ddb = boto3.resource("dynamodb")
-table = ddb.Table(os.getenv("TABLE_NAME", None))
+table = ddb.Table(os.environ["TABLE_NAME"])
 
 
 def lambda_handler(event, context):

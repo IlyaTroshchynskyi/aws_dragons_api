@@ -25,4 +25,3 @@ def test_create_dragon(create_test_table, monkeypatch):
     assert response.json().get("breed") == "Standard Western Dragon"
     assert response.json().get("danger_rating") == "4"
     assert response.json().get("description") == "Cute dragon that eats babies"
-
