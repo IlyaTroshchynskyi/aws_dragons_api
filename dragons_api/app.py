@@ -5,6 +5,7 @@ import os
 import boto3
 
 from api import DragonApi
+from validators import DragonValidator
 
 
 if int(os.environ.get("AWS_SAM_LOCAL", "")):
@@ -20,7 +21,7 @@ logger.setLevel("DEBUG")
 
 
 def lambda_handler(event, context):
-    api = DragonApi(table)
+    api = DragonApi(table, DragonValidator())
     method = event.get("httpMethod")
     resource = event.get("resource")
     logger.debug(event)

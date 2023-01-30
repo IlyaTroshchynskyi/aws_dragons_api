@@ -133,6 +133,6 @@
       "domainName":"execute-api.us-east-1.amazonaws.com",
       "apiId":"id"
    },
-   "body":"{\"name\": \"Carl Updated\", \"breed\": \"Updated\", \"danger_rating\": \"9\"}",
+   "body":"{\"name\": \"Carl Updated\", \"breed\": \"Updated\", \"danger_rating\": 9}",
    "isBase64Encoded":false
 }

@@ -11,8 +11,9 @@ logger.setLevel("DEBUG")
 
 
 class DragonApi:
-    def __init__(self, table):
+    def __init__(self, table, validators):
         self.table = table
+        self.validators = validators
 
     def get_dragons(self) -> dict:
         """
@@ -34,6 +35,10 @@ class DragonApi:
         """
         Create dragon if dragon not exists in table
         """
+        valid = self.validators.validate_create_update_dragon(data)
+        if valid is not True:
+            return json_response({"message": valid}, 400)
+
         data.update(
             {
                 "dragon_id": str(uuid.uuid4()),
@@ -72,6 +77,10 @@ class DragonApi:
         """
         Update dragon if user is authorized and owner of dragon
         """
+        valid = self.validators.validate_create_update_dragon(data)
+        if valid is not True:
+            return json_response({"message": valid}, 400)
+
         update_expression, attribute_values, attribute_names = get_update_params(data)
         attribute_values.update({":username": username})
         try:
@@ -99,6 +108,6 @@ class DragonApi:
     @staticmethod
     def get_username(event: dict) -> str:
         """
-        Get username from event objects
+        Get username from event object
         """
         return event.get("requestContext").get("authorizer").get("claims").get("sub")
