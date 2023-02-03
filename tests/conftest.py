@@ -24,13 +24,10 @@ def create_test_table():
 
 
 @pytest.fixture(scope="function")
-def create_dragon(create_test_table, monkeypatch):
-    def get_id():
-        return "1"
+def create_dragon(create_test_table):
 
-    monkeypatch.setattr(uuid, "uuid4", get_id)
     data = {
-        "dragon_id": str(uuid.uuid4()),
+        "dragon_id": "1",
         "created_at": str(datetime.now()),
         "name": "Test name",
         "breed": "Standard Western Dragon",

@@ -17,7 +17,7 @@ def test_create_dragon(create_test_table):
     response = os.popen(
         f'sam local invoke "DragonFunction" -e {BASE_DIR}/events/create_dragon_data.json  '
         f"--template-file {BASE_DIR}/template.yaml "
-        f"--env-vars {BASE_DIR}/env.json  "
+        f"--env-vars {BASE_DIR}/env_test.json  "
         f"--docker-network dragons"
     )
     data = json.loads(response.read())
