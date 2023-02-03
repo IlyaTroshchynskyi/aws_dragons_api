@@ -21,11 +21,17 @@ class DragonApi:
         dragons = self.table.scan()["Items"]
         return json_response(dragons)
 
-    def create_dragon(self, data):
+    def create_dragon(self, data, username):
         """
         Create dragon if dragon not exists in table
         """
-        data.update({"dragon_id": str(uuid.uuid4()), "created_at": str(datetime.now())})
+        data.update(
+            {
+                "dragon_id": str(uuid.uuid4()),
+                "created_at": str(datetime.now()),
+                "username": username,
+            }
+        )
         try:
             self.table.put_item(
                 Item=data, ConditionExpression="attribute_not_exists(dragon_id)"

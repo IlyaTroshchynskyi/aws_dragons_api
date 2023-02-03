@@ -28,6 +28,76 @@ Resources:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
 
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      UserPoolName: DragonUserPool
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      Schema:
+        - AttributeDataType: String
+          Name: "preferred_username"
+          Required: true
+          Mutable: true
+        - AttributeDataType: String
+          Name: "email"
+          Required: true
+          Mutable: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 6
+          RequireLowercase: true
+          RequireNumbers: false
+          RequireSymbols: false
+          RequireUppercase: true
+
+  UserPoolTokenClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      ClientName: DragonsUserPoolClient
+      GenerateSecret: false # Boolean to specify whether you want to generate a secret for the user pool client being created.
+      SupportedIdentityProviders:
+        - COGNITO
+      CallbackURLs:
+        - https://example.com/callback
+      LogoutURLs:
+        - https://example.com/signout
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - implicit
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - phone
+        - aws.cognito.signin.user.admin
+
+  DragonUserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: dragon-domain
+      UserPoolId:  !Ref UserPool
+
+  DragonApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: DragonApi
+      StageName: Prod
+      # This is only needed if you are Requesting from a domain that is not shared with this API Domain
+      # Know the security implications before doing this on a production site
+      Cors:
+        AllowMethods: "'*'"
+        AllowHeaders: "'*'"
+        AllowOrigin: "'*'"
+      Auth:
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt "UserPool.Arn"
+
   DragonFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -46,12 +116,16 @@ Resources:
         ListDragons:
           Type: Api
           Properties:
+            RestApiId: !Ref DragonApi
             Path: /dragons
             Method: get
 
         CreateDragon:
           Type: Api
           Properties:
+            RestApiId: !Ref DragonApi
+            Auth:
+              Authorizer: CognitoAuthorizer
             Path: /dragons
             Method: post
 
