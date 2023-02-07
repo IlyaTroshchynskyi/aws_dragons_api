@@ -25,8 +25,9 @@ def create_test_table():
 
 @pytest.fixture(scope="function")
 def create_dragon(create_test_table):
+
     data = {
-        "dragon_id": str(uuid.uuid4()),
+        "dragon_id": "1",
         "created_at": str(datetime.now()),
         "name": "Test name",
         "breed": "Standard Western Dragon",

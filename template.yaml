@@ -129,6 +129,31 @@ Resources:
             Path: /dragons
             Method: post
 
+        GetDragon:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DragonApi
+            Path: /dragons/{dragon_id}
+            Method: get
+
+        PatchDragon:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DragonApi
+            Auth:
+              Authorizer: CognitoAuthorizer
+            Path: /dragons/{dragon_id}
+            Method: patch
+
+        DeleteDragon:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DragonApi
+            Auth:
+              Authorizer: CognitoAuthorizer
+            Path: /dragons/{dragon_id}
+            Method: delete
+
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref DragonTable
