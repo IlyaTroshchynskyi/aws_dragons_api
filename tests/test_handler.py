@@ -4,6 +4,9 @@ from pathlib import Path
 
 import requests
 
+from .utils import create_invoke_command
+
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -14,12 +17,8 @@ def test_get_dragons(create_test_table, create_dragon):
 
 
 def test_create_dragon(create_test_table):
-    response = os.popen(
-        f'sam local invoke "DragonFunction" -e {BASE_DIR}/events/create_dragon_data.json  '
-        f"--template-file {BASE_DIR}/template.yaml "
-        f"--env-vars {BASE_DIR}/env_test.json  "
-        f"--docker-network dragons"
-    )
+    command = create_invoke_command(BASE_DIR, "DragonFunction", "create_dragon_data")
+    response = os.popen(command)
     data = json.loads(response.read())
     body = json.loads(data.get("body"))
     assert data.get("statusCode") == 201
@@ -41,12 +40,8 @@ def test_get_dragon(create_test_table, create_dragon):
 
 
 def test_delete_dragon(create_test_table, create_dragon):
-    response = os.popen(
-        f'sam local invoke "DragonFunction" -e {BASE_DIR}/events/delete_dragon_data.json  '
-        f"--template-file {BASE_DIR}/template.yaml "
-        f"--env-vars {BASE_DIR}/env_test.json  "
-        f"--docker-network dragons"
-    )
+    command = create_invoke_command(BASE_DIR, "DragonFunction", "delete_dragon_data")
+    response = os.popen(command)
     data = json.loads(response.read())
     body = json.loads(data.get("body"))
     assert data.get("statusCode") == 204
@@ -54,12 +49,8 @@ def test_delete_dragon(create_test_table, create_dragon):
 
 
 def test_delete_dragon_not_owner(create_test_table, create_dragon):
-    response = os.popen(
-        f'sam local invoke "DragonFunction" -e {BASE_DIR}/events/delete_dragon_not_owner_data.json  '
-        f"--template-file {BASE_DIR}/template.yaml "
-        f"--env-vars {BASE_DIR}/env_test.json  "
-        f"--docker-network dragons"
-    )
+    command = create_invoke_command(BASE_DIR, "DragonFunction", "delete_dragon_not_owner_data")
+    response = os.popen(command)
     data = json.loads(response.read())
     body = json.loads(data.get("body"))
     assert data.get("statusCode") == 404
@@ -67,12 +58,8 @@ def test_delete_dragon_not_owner(create_test_table, create_dragon):
 
 
 def test_update_dragon(create_test_table, create_dragon):
-    response = os.popen(
-        f'sam local invoke "DragonFunction" -e {BASE_DIR}/events/update_dragon_data.json  '
-        f"--template-file {BASE_DIR}/template.yaml "
-        f"--env-vars {BASE_DIR}/env_test.json  "
-        f"--docker-network dragons"
-    )
+    command = create_invoke_command(BASE_DIR, "DragonFunction", "update_dragon_data")
+    response = os.popen(command)
     data = json.loads(response.read())
     body = json.loads(data.get("body"))
     assert data.get("statusCode") == 200
@@ -89,12 +76,8 @@ def test_update_dragon(create_test_table, create_dragon):
 
 
 def test_update_dragon_not_owner(create_test_table, create_dragon):
-    response = os.popen(
-        f'sam local invoke "DragonFunction" -e {BASE_DIR}/events/update_dragon_not_owner_data.json  '
-        f"--template-file {BASE_DIR}/template.yaml "
-        f"--env-vars {BASE_DIR}/env_test.json  "
-        f"--docker-network dragons"
-    )
+    command = create_invoke_command(BASE_DIR, "DragonFunction", "update_dragon_not_owner_data")
+    response = os.popen(command)
     data = json.loads(response.read())
     body = json.loads(data.get("body"))
     assert data.get("statusCode") == 404
@@ -102,12 +85,8 @@ def test_update_dragon_not_owner(create_test_table, create_dragon):
 
 
 def test_create_not_valid_dragon(create_test_table, create_dragon):
-    response = os.popen(
-        f'sam local invoke "DragonFunction" -e {BASE_DIR}/events/create_not_valid_dragon.json  '
-        f"--template-file {BASE_DIR}/template.yaml "
-        f"--env-vars {BASE_DIR}/env_test.json  "
-        f"--docker-network dragons"
-    )
+    command = create_invoke_command(BASE_DIR, "DragonFunction", "create_not_valid_dragon")
+    response = os.popen(command)
     data = json.loads(response.read())
     body = json.loads(data.get("body"))
     assert data.get("statusCode") == 400
@@ -121,12 +100,8 @@ def test_create_not_valid_dragon(create_test_table, create_dragon):
 
 
 def test_update_not_valid_dragon(create_test_table, create_dragon):
-    response = os.popen(
-        f'sam local invoke "DragonFunction" -e {BASE_DIR}/events/update_not_valid_dragon.json  '
-        f"--template-file {BASE_DIR}/template.yaml "
-        f"--env-vars {BASE_DIR}/env_test.json  "
-        f"--docker-network dragons"
-    )
+    command = create_invoke_command(BASE_DIR, "DragonFunction", "update_not_valid_dragon")
+    response = os.popen(command)
     data = json.loads(response.read())
     body = json.loads(data.get("body"))
     assert data.get("statusCode") == 400
