@@ -1,6 +1,4 @@
-import uuid
 from datetime import datetime
-
 import boto3
 import pytest
 
@@ -31,7 +29,7 @@ def create_dragon(create_test_table):
         "created_at": str(datetime.now()),
         "name": "Test name",
         "breed": "Standard Western Dragon",
-        "danger_rating": "4",
+        "danger_rating": 4,
         "description": "Cute dragon that eats babies",
         "username": "1",
     }

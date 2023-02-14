@@ -82,6 +82,15 @@ Resources:
       Domain: dragon-domain
       UserPoolId:  !Ref UserPool
 
+  MyLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: layer
+      CompatibleRuntimes:
+        - python3.9
+    Metadata:
+      BuildMethod: makefile
+
   DragonApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -106,6 +115,8 @@ Resources:
       Runtime: python3.9
       Architectures:
       - x86_64
+      Layers:
+        - !Ref MyLayer
       Environment:
         Variables:
           DYNAMODB_ENDPOINT: url

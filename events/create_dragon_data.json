@@ -133,6 +133,6 @@
       "domainName":"execute-api.us-east-1.amazonaws.com",
       "apiId":"id"
    },
-   "body":"{\"name\": \"Carl Junior1_test\", \"breed\": \"Standard Western Dragon\", \"danger_rating\": \"5\", \"description\": \"Cute dragon that eats babies\"}",
+   "body":"{\"name\": \"Carl Junior1_test\", \"breed\": \"Standard Western Dragon\", \"danger_rating\": 5, \"description\": \"Cute dragon that eats babies\"}",
    "isBase64Encoded":false
 }

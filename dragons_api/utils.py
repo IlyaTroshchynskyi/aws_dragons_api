@@ -8,7 +8,7 @@ class DecimalEncoder(json.JSONEncoder):
         Serialize Decimal object
         """
         if isinstance(obj, Decimal):
-            return str(obj)
+            return int(obj)
         return super().default(obj)
 
 
