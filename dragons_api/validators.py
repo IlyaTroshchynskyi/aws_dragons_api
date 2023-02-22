@@ -38,7 +38,7 @@ class DragonValidator:
             else True
         )
 
-    def validate_create_update_dragon(self, data: dict) -> Union[dict, bool]:
+    def validate_dragon(self, data: dict) -> Union[dict, bool]:
         """
         Validate dragon using validators and send list of messages to user
         """

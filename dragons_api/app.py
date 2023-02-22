@@ -27,7 +27,7 @@ def lambda_handler(event, context):
     logger.debug(event)
 
     if method == "GET" and resource == "/dragons":
-        return api.get_dragons()
+        return api.get_dragons(event.get("queryStringParameters") or {})
     if method == "GET" and resource == "/dragons/{dragon_id}":
         return api.get_dragon(event.get("pathParameters"))
     if method == "POST" and resource == "/dragons":

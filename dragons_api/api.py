@@ -1,7 +1,9 @@
 import logging
 import uuid
 from datetime import datetime
+from typing import Union
 
+from boto3.dynamodb.conditions import Attr
 from botocore.exceptions import ClientError
 from utils import json_response, get_update_params
 
@@ -15,11 +17,22 @@ class DragonApi:
         self.table = table
         self.validators = validators
 
-    def get_dragons(self) -> dict:
+    def get_dragons(self, query_params:  Union[dict, None]) -> dict:
         """
-        Get all dragons from db
+        Get all dragons from db. User can paginate query using LastEvaluatedKey which
+        equal the last dragon_id in query. Filter dragons using field "breed".
+        Show 3 items per one query
         """
-        dragons = self.table.scan()["Items"]
+        scan_kwargs = {}
+        if "LastEvaluatedKey" in query_params:
+            scan_kwargs.update(
+                {"ExclusiveStartKey": {"dragon_id": query_params["LastEvaluatedKey"]}}
+            )
+        if "breed" in query_params:
+            scan_kwargs.update(
+                {"FilterExpression": Attr("breed").eq(query_params.get("breed"))}
+            )
+        dragons = self.table.scan(Limit=3, **scan_kwargs)["Items"]
         return json_response(dragons)
 
     def get_dragon(self, key: dict) -> dict:
@@ -35,7 +48,7 @@ class DragonApi:
         """
         Create dragon if dragon not exists in table
         """
-        valid = self.validators.validate_create_update_dragon(data)
+        valid = self.validators.validate_dragon(data)
         if valid is not True:
             return json_response({"message": valid}, 400)
 
@@ -77,7 +90,7 @@ class DragonApi:
         """
         Update dragon if user is authorized and owner of dragon
         """
-        valid = self.validators.validate_create_update_dragon(data)
+        valid = self.validators.validate_dragon(data)
         if valid is not True:
             return json_response({"message": valid}, 400)
 
