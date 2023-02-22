@@ -38,5 +38,5 @@ data_6 = {
         (data_6, [{"message": "Danger rating must be integer or between 0 and 10"}]),
     ],
 )
-def test_validate_create_update_dragon(data, expected_result):
-    assert DragonValidator().validate_create_update_dragon(data) == expected_result
+def test_validate_dragon(data, expected_result):
+    assert DragonValidator().validate_dragon(data) == expected_result

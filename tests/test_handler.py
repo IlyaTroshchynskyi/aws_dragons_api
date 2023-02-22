@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 def test_get_dragons(create_test_table, create_dragon):
     response = requests.get("http://127.0.0.1:3000/dragons")
     assert response.status_code == 200
-    assert response.json() == [create_dragon]
+    assert response.json() == [create_dragon[0], create_dragon[3], create_dragon[2]]
 
 
 def test_create_dragon(create_test_table):
@@ -33,10 +33,10 @@ def test_create_dragon(create_test_table):
 
 def test_get_dragon(create_test_table, create_dragon):
     response = requests.get(
-        f"http://127.0.0.1:3000/dragons/{create_dragon.get('dragon_id')}"
+        f"http://127.0.0.1:3000/dragons/{create_dragon[0].get('dragon_id')}"
     )
     assert response.status_code == 200
-    assert response.json() == create_dragon
+    assert response.json() == create_dragon[0]
 
 
 def test_delete_dragon(create_test_table, create_dragon):
@@ -65,7 +65,7 @@ def test_update_dragon(create_test_table, create_dragon):
     assert data.get("statusCode") == 200
     assert body == {"message": "Dragon is updated"}
     response = requests.get(
-        f"http://127.0.0.1:3000/dragons/{create_dragon.get('dragon_id')}"
+        f"http://127.0.0.1:3000/dragons/{create_dragon[0].get('dragon_id')}"
     )
     body = response.json()
     assert body.get("name") == "Carl Updated"
@@ -112,3 +112,21 @@ def test_update_not_valid_dragon(create_test_table, create_dragon):
             {"message": "Danger rating must be integer or between 0 and 10"},
         ]
     }
+
+
+def test_get_dragons_with_pagination(create_test_table, create_dragon):
+    response = requests.get("http://127.0.0.1:3000/dragons?LastEvaluatedKey=4")
+    assert response.status_code == 200
+    assert response.json() == [create_dragon[2], create_dragon[1]]
+
+
+def test_get_dragons_with_breed_filter(create_test_table, create_dragon):
+    response = requests.get("http://127.0.0.1:3000/dragons?breed=3")
+    assert response.status_code == 200
+    assert response.json() == [create_dragon[3], create_dragon[2]]
+
+
+def test_get_dragons_with_breed_filter_and_pagination(create_test_table, create_dragon):
+    response = requests.get("http://127.0.0.1:3000/dragons?LastEvaluatedKey=4&breed=3")
+    assert response.status_code == 200
+    assert response.json() == [create_dragon[2]]
