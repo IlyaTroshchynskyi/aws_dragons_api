@@ -16,6 +16,9 @@ def env_vars():
         "DYNAMODB_ENDPOINT": "http://127.0.0.1:8000",
         "AWS_S3_BUCKET_NAME": "dragonsapidev",
         "TABLE_NAME": "dragons_test_table",
+        "STATISTICS_TABLE_NAME": "dragon_statistics_test_table",
+        "EVENT_BRIDGE_ENDPOINT": "http://localhost:5000",
+        "EVENT_BUS_NAME": "test_event_bus",
     }
 
 
@@ -114,3 +117,41 @@ def create_file_on_s3(base_dir, env_vars):
     yield
     s3_client.delete_object(Bucket=bucket_name, Key="dragons.csv")
     s3_client.delete_bucket(Bucket=bucket_name)
+
+
+@pytest.fixture(scope="function")
+def create_test_table_statistics(env_vars):
+    client = boto3.client("dynamodb", endpoint_url=env_vars["DYNAMODB_ENDPOINT"])
+    client.create_table(
+        AttributeDefinitions=[
+            {"AttributeName": "record_id", "AttributeType": "S"},
+        ],
+        TableName=env_vars["STATISTICS_TABLE_NAME"],
+        KeySchema=[
+            {"AttributeName": "record_id", "KeyType": "HASH"},
+        ],
+        BillingMode="PAY_PER_REQUEST",
+        ProvisionedThroughput={"ReadCapacityUnits": 5, "WriteCapacityUnits": 5},
+    )
+    client.update_time_to_live(
+        TableName=env_vars["STATISTICS_TABLE_NAME"],
+        TimeToLiveSpecification={"Enabled": True, "AttributeName": "dragon_ttl"},
+    )
+    yield
+    client.delete_table(TableName=env_vars["STATISTICS_TABLE_NAME"])
+
+
+@pytest.fixture(scope="function")
+def dynamo_db_statistics_table(create_test_table_statistics, env_vars):
+    ddb = boto3.resource("dynamodb", endpoint_url=env_vars["DYNAMODB_ENDPOINT"])
+    table = ddb.Table(env_vars["STATISTICS_TABLE_NAME"])
+    yield table
+
+
+@pytest.fixture(scope="function")
+def create_event_bus(env_vars):
+    client = boto3.client("events", endpoint_url=env_vars["EVENT_BRIDGE_ENDPOINT"])
+
+    client.create_event_bus(Name=env_vars["EVENT_BUS_NAME"])
+    yield
+    client.delete_event_bus(Name=env_vars["EVENT_BUS_NAME"])

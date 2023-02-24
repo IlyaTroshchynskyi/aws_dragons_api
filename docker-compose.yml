@@ -21,6 +21,15 @@ services:
       - dragons
     command: server /data --console-address ":9001"
 
+  event:
+    image: motoserver/moto
+    restart: always
+    environment:
+      - MOTO_SERVICE=events
+    ports:
+      - "5000:5000"
+    networks:
+      - dragons
 
 networks:
   dragons:

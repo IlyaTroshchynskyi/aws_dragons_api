@@ -1,11 +1,13 @@
 import json
 import logging
+import os
 
 from api import DragonApi
 from utils import get_dynamodb_table
 from validators import DragonValidator
 
-table = get_dynamodb_table()
+table_name = os.environ["TABLE_NAME"]
+table = get_dynamodb_table(table_name)
 
 logger = logging.getLogger(__name__)
 logger.setLevel("DEBUG")

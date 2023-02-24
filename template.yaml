@@ -10,6 +10,14 @@ Globals:
     Timeout: 3
     MemorySize: 128
     Tracing: Active
+    Environment:
+
+      Variables:
+        AWS_SAM_LOCAL: prod
+#  All Lambda instances are set to UTC timezone.
+#  Incase you want to change that behavior you need to update environment variable.
+        TZ: EET
+
   Api:
     TracingEnabled: true
 
@@ -36,6 +44,25 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
+      StreamSpecification:
+        StreamViewType: KEYS_ONLY
+
+  StatisticsDragonTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: "dragon_statistics"
+      AttributeDefinitions:
+        - AttributeName: "record_id"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "record_id"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      TimeToLiveSpecification:
+        AttributeName: dragon_ttl
+        Enabled: true
 
   UserPool:
     Type: AWS::Cognito::UserPool
@@ -129,8 +156,7 @@ Resources:
       Environment:
         Variables:
           DYNAMODB_ENDPOINT: url
-          TABLE_NAME: dragons
-          AWS_SAM_LOCAL: 0
+          TABLE_NAME: !Ref DragonTable
 
       Events:
         ListDragons:
@@ -189,7 +215,6 @@ Resources:
       Environment:
         Variables:
           AWS_S3_ENDPOINT_URL: http://s3:9000
-          AWS_SAM_LOCAL: 0
           ACCESS_KEY_ID: access_key
           SECRET_ACCESS_KEY: secret_key
           AWS_S3_BUCKET_NAME: dragonsapi
@@ -217,12 +242,11 @@ Resources:
       Environment:
         Variables:
           AWS_S3_ENDPOINT_URL: http://s3:9000
-          AWS_SAM_LOCAL: 0
           ACCESS_KEY_ID: access_key
           SECRET_ACCESS_KEY: secret_key
           AWS_S3_BUCKET_NAME: dragonsapi
           DYNAMODB_ENDPOINT: url
-          TABLE_NAME: dragons
+          TABLE_NAME: !Ref DragonTable
 
       Policies:
         - S3ReadPolicy:
@@ -242,6 +266,82 @@ Resources:
                   - Name: suffix
                     Value: ".csv"
 
+# =======================================task EventBridge
+  DynamoDbStreamEventCreator:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dragons_api/
+      Handler: dynamodb_stream_event.lambda_handler
+      Runtime: python3.9
+      Layers:
+        - !Ref MyLayer
+      Environment:
+        Variables:
+          EVENT_BRIDGE_ENDPOINT: url
+          SOURCE: "DynamoDbStreamEventCreator"
+          EVENT_BUS_NAME: !Ref DragonEventBus
+
+      Policies:
+        - DynamoDBStreamReadPolicy:
+            TableName: !Ref DragonTable
+            StreamName: !GetAtt DragonTable.StreamArn
+        - EventBridgePutEventsPolicy:
+            EventBusName: !Ref DragonEventBus
+
+      Events:
+        DynamoDbStream:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt DragonTable.StreamArn
+            StartingPosition: LATEST
+
+  DragonEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: "DragonsEventBus"
+
+  DragonEventBusRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventBusName: !Ref DragonEventBus
+      Name: DragonsEventsRule
+      EventPattern:
+        source:
+          - DynamoDbStreamEventCreator
+      Targets:
+          - Arn: !GetAtt EventBridgeHandler.Arn
+            Id: !Ref EventBridgeHandler
+
+# important permission because when you use console background job will create this permission
+# you don't see in aws console of event rule this permission
+  EventsRulePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref EventBridgeHandler
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt DragonEventBusRule.Arn
+
+
+  EventBridgeHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dragons_api/
+      Handler: handler_event_bridge.lambda_handler
+      Runtime: python3.9
+      Layers:
+        - !Ref MyLayer
+      Environment:
+        Variables:
+          DYNAMODB_ENDPOINT: url
+          STATISTICS_TABLE_NAME: !Ref StatisticsDragonTable
+          TIME_TO_LIVE: 0.003
+
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref StatisticsDragonTable
+
+
 Outputs:
   DragonFunction:
     Description: "Dragon Lambda Function ARN"
@@ -249,3 +349,7 @@ Outputs:
   DragonFunctionIamRole:
     Description: "Implicit IAM Role created for Dragon function"
     Value: !GetAtt DragonFunctionRole.Arn
+
+  EventBusRef:
+    Description: "Check Event bus"
+    Value: !Ref DragonEventBus

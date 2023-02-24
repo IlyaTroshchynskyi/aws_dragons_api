@@ -9,7 +9,8 @@ from utils import json_response, get_s3_client, get_dynamodb_table
 from validators import DragonValidator
 
 s3_client = get_s3_client()
-table = get_dynamodb_table()
+table_name = os.environ["TABLE_NAME"]
+table = get_dynamodb_table(table_name)
 
 
 def lambda_handler(event, context):
