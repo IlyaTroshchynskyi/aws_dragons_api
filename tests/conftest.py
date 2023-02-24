@@ -1,16 +1,38 @@
+import os
 from datetime import datetime
+from pathlib import Path
+
 import boto3
 import pytest
+from botocore.config import Config
 
 
 @pytest.fixture(scope="function")
-def create_test_table():
-    client = boto3.client("dynamodb", endpoint_url="http://localhost:8000")
+def env_vars():
+    yield {
+        "AWS_S3_ENDPOINT_URL": "http://localhost:9000",
+        "AWS_ACCESS_KEY_ID": "access_key",
+        "AWS_SECRET_ACCESS_KEY": "secret_key",
+        "DYNAMODB_ENDPOINT": "http://127.0.0.1:8000",
+        "AWS_S3_BUCKET_NAME": "dragonsapidev",
+        "TABLE_NAME": "dragons_test_table",
+    }
+
+
+@pytest.fixture(scope="function")
+def base_dir():
+    base_dir = Path(__file__).resolve().parent.parent
+    yield base_dir
+
+
+@pytest.fixture(scope="function")
+def create_test_table(env_vars):
+    client = boto3.client("dynamodb", endpoint_url=env_vars["DYNAMODB_ENDPOINT"])
     client.create_table(
         AttributeDefinitions=[
             {"AttributeName": "dragon_id", "AttributeType": "S"},
         ],
-        TableName="dragons_test_table",
+        TableName=env_vars["TABLE_NAME"],
         KeySchema=[
             {"AttributeName": "dragon_id", "KeyType": "HASH"},
         ],
@@ -18,11 +40,18 @@ def create_test_table():
         ProvisionedThroughput={"ReadCapacityUnits": 5, "WriteCapacityUnits": 5},
     )
     yield
-    client.delete_table(TableName="dragons_test_table")
+    client.delete_table(TableName=env_vars["TABLE_NAME"])
 
 
 @pytest.fixture(scope="function")
-def create_dragon(create_test_table):
+def dynamo_db_table(create_test_table, env_vars):
+    ddb = boto3.resource("dynamodb", endpoint_url=env_vars["DYNAMODB_ENDPOINT"])
+    table = ddb.Table(env_vars["TABLE_NAME"])
+    yield table
+
+
+@pytest.fixture(scope="function")
+def create_dragon(create_test_table, dynamo_db_table):
 
     dragon_1 = {
         "dragon_id": "1",
@@ -60,11 +89,28 @@ def create_dragon(create_test_table):
         "description": "Cute dragon that eats babies",
         "username": "1",
     }
-    ddb = boto3.resource("dynamodb", endpoint_url="http://localhost:8000")
-    table = ddb.Table("dragons_test_table")
-    table.put_item(Item=dragon_1)
-    table.put_item(Item=dragon_2)
-    table.put_item(Item=dragon_3)
-    table.put_item(Item=dragon_4)
+    dynamo_db_table.put_item(Item=dragon_1)
+    dynamo_db_table.put_item(Item=dragon_2)
+    dynamo_db_table.put_item(Item=dragon_3)
+    dynamo_db_table.put_item(Item=dragon_4)
 
     yield dragon_1, dragon_2, dragon_3, dragon_4
+
+
+@pytest.fixture(scope="function")
+def create_file_on_s3(base_dir, env_vars):
+    s3_client = boto3.client(
+        "s3",
+        endpoint_url=env_vars["AWS_S3_ENDPOINT_URL"],
+        config=Config(signature_version="s3v4"),
+        aws_access_key_id=env_vars["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=env_vars["AWS_SECRET_ACCESS_KEY"],
+    )
+    bucket_name = env_vars["AWS_S3_BUCKET_NAME"]
+    s3_client.create_bucket(ACL="public-read", Bucket=bucket_name)
+    s3_client.upload_file(
+        os.path.join(base_dir, "events/dragons.csv"), bucket_name, "dragons.csv"
+    )
+    yield
+    s3_client.delete_object(Bucket=bucket_name, Key="dragons.csv")
+    s3_client.delete_bucket(Bucket=bucket_name)
