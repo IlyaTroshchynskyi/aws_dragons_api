@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List
 
 
 class DragonValidator:
@@ -38,7 +38,7 @@ class DragonValidator:
             else True
         )
 
-    def validate_dragon(self, data: dict) -> Union[dict, bool]:
+    def validate_dragon(self, data: dict) -> Union[List, dict, bool]:
         """
         Validate dragon using validators and send list of messages to user
         """

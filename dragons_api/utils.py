@@ -6,6 +6,13 @@ import boto3
 from botocore.config import Config
 
 
+def is_develop() -> bool:
+    """
+    Define if we run lambda functions in dev or prod environment
+    """
+    return os.environ["AWS_SAM_LOCAL"] == "dev"
+
+
 class DecimalEncoder(json.JSONEncoder):
     def default(self, obj):
         """
@@ -45,7 +52,7 @@ def get_s3_client():
     """
     Initializes s3 client
     """
-    if int(os.environ.get("AWS_SAM_LOCAL", "")):
+    if is_develop():
         s3_client = boto3.client(
             "s3",
             endpoint_url=os.environ.get("AWS_S3_ENDPOINT_URL", ""),
@@ -58,11 +65,11 @@ def get_s3_client():
     return s3_client
 
 
-def get_dynamodb_table():
+def get_dynamodb_table(table_name: str):
     """
     Initializes dynamodb table
     """
-    if int(os.environ.get("AWS_SAM_LOCAL", "")):
+    if is_develop():
         ddb = boto3.resource(
             "dynamodb",
             endpoint_url=os.environ.get("DYNAMODB_ENDPOINT", "test"),
@@ -70,5 +77,18 @@ def get_dynamodb_table():
     else:
         ddb = boto3.resource("dynamodb")
 
-    table = ddb.Table(os.environ["TABLE_NAME"])
+    table = ddb.Table(table_name)
     return table
+
+
+def get_event_client():
+    """
+    Initializes data bridge event client
+    """
+    if is_develop():
+        client = boto3.client(
+            "events", endpoint_url=os.environ.get("EVENT_BRIDGE_ENDPOINT")
+        )
+    else:
+        client = boto3.client("events")
+    return client
