@@ -14,6 +14,15 @@ Globals:
     TracingEnabled: true
 
 Resources:
+
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: dragonsapi
+      AccessControl: Private
+      VersioningConfiguration:
+        Status: Enabled
+
   DragonTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -168,6 +177,70 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref DragonTable
+
+  GeneratePresignedUrl:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dragons_api/
+      Handler: generate_url.lambda_handler
+      Runtime: python3.9
+      Layers:
+        - !Ref MyLayer
+      Environment:
+        Variables:
+          AWS_S3_ENDPOINT_URL: http://s3:9000
+          AWS_SAM_LOCAL: 0
+          ACCESS_KEY_ID: access_key
+          SECRET_ACCESS_KEY: secret_key
+          AWS_S3_BUCKET_NAME: dragonsapi
+      Policies:
+        - S3WritePolicy:
+             BucketName: dragonsapi
+      Events:
+        GenerateUrl:
+          Type: Api
+          Properties:
+            RestApiId: !Ref DragonApi
+            Auth:
+              Authorizer: CognitoAuthorizer
+            Path: /generate_url
+            Method: get
+
+  UploadDragonsToDynamoDb:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dragons_api/
+      Handler: upload_to_db.lambda_handler
+      Runtime: python3.9
+      Layers:
+        - !Ref MyLayer
+      Environment:
+        Variables:
+          AWS_S3_ENDPOINT_URL: http://s3:9000
+          AWS_SAM_LOCAL: 0
+          ACCESS_KEY_ID: access_key
+          SECRET_ACCESS_KEY: secret_key
+          AWS_S3_BUCKET_NAME: dragonsapi
+          DYNAMODB_ENDPOINT: url
+          TABLE_NAME: dragons
+
+      Policies:
+        - S3ReadPolicy:
+            BucketName: dragonsapi
+        - DynamoDBWritePolicy:
+            TableName: !Ref DragonTable
+
+      Events:
+        FileUpload:
+          Type: S3
+          Properties:
+            Bucket:  !Ref Bucket
+            Events: s3:ObjectCreated:Put
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: suffix
+                    Value: ".csv"
 
 Outputs:
   DragonFunction:

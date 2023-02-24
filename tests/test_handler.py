@@ -1,13 +1,9 @@
 import json
 import os
-from pathlib import Path
 
 import requests
 
 from .utils import create_invoke_command
-
-
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def test_get_dragons(create_test_table, create_dragon):
@@ -16,8 +12,8 @@ def test_get_dragons(create_test_table, create_dragon):
     assert response.json() == [create_dragon[0], create_dragon[3], create_dragon[2]]
 
 
-def test_create_dragon(create_test_table):
-    command = create_invoke_command(BASE_DIR, "DragonFunction", "create_dragon_data")
+def test_create_dragon(create_test_table, base_dir):
+    command = create_invoke_command(base_dir, "DragonFunction", "create_dragon_data")
     response = os.popen(command)
     data = json.loads(response.read())
     body = json.loads(data.get("body"))
@@ -39,8 +35,8 @@ def test_get_dragon(create_test_table, create_dragon):
     assert response.json() == create_dragon[0]
 
 
-def test_delete_dragon(create_test_table, create_dragon):
-    command = create_invoke_command(BASE_DIR, "DragonFunction", "delete_dragon_data")
+def test_delete_dragon(create_test_table, create_dragon, base_dir):
+    command = create_invoke_command(base_dir, "DragonFunction", "delete_dragon_data")
     response = os.popen(command)
     data = json.loads(response.read())
     body = json.loads(data.get("body"))
@@ -48,8 +44,8 @@ def test_delete_dragon(create_test_table, create_dragon):
     assert body == {"message": "Dragon is deleted"}
 
 
-def test_delete_dragon_not_owner(create_test_table, create_dragon):
-    command = create_invoke_command(BASE_DIR, "DragonFunction", "delete_dragon_not_owner_data")
+def test_delete_dragon_not_owner(create_test_table, create_dragon, base_dir):
+    command = create_invoke_command(base_dir, "DragonFunction", "delete_dragon_not_owner_data")
     response = os.popen(command)
     data = json.loads(response.read())
     body = json.loads(data.get("body"))
@@ -57,8 +53,8 @@ def test_delete_dragon_not_owner(create_test_table, create_dragon):
     assert body == {"message": "dragon is not found or user is not owner of dragon"}
 
 
-def test_update_dragon(create_test_table, create_dragon):
-    command = create_invoke_command(BASE_DIR, "DragonFunction", "update_dragon_data")
+def test_update_dragon(create_test_table, create_dragon, base_dir):
+    command = create_invoke_command(base_dir, "DragonFunction", "update_dragon_data")
     response = os.popen(command)
     data = json.loads(response.read())
     body = json.loads(data.get("body"))
@@ -75,8 +71,8 @@ def test_update_dragon(create_test_table, create_dragon):
     assert body.get("username") == "1"
 
 
-def test_update_dragon_not_owner(create_test_table, create_dragon):
-    command = create_invoke_command(BASE_DIR, "DragonFunction", "update_dragon_not_owner_data")
+def test_update_dragon_not_owner(create_test_table, create_dragon, base_dir):
+    command = create_invoke_command(base_dir, "DragonFunction", "update_dragon_not_owner_data")
     response = os.popen(command)
     data = json.loads(response.read())
     body = json.loads(data.get("body"))
@@ -84,8 +80,8 @@ def test_update_dragon_not_owner(create_test_table, create_dragon):
     assert body == {"message": "dragon is not found or user is not owner of dragon"}
 
 
-def test_create_not_valid_dragon(create_test_table, create_dragon):
-    command = create_invoke_command(BASE_DIR, "DragonFunction", "create_not_valid_dragon")
+def test_create_not_valid_dragon(create_test_table, create_dragon, base_dir):
+    command = create_invoke_command(base_dir, "DragonFunction", "create_not_valid_dragon")
     response = os.popen(command)
     data = json.loads(response.read())
     body = json.loads(data.get("body"))
@@ -99,8 +95,8 @@ def test_create_not_valid_dragon(create_test_table, create_dragon):
     }
 
 
-def test_update_not_valid_dragon(create_test_table, create_dragon):
-    command = create_invoke_command(BASE_DIR, "DragonFunction", "update_not_valid_dragon")
+def test_update_not_valid_dragon(create_test_table, create_dragon, base_dir):
+    command = create_invoke_command(base_dir, "DragonFunction", "update_not_valid_dragon")
     response = os.popen(command)
     data = json.loads(response.read())
     body = json.loads(data.get("body"))

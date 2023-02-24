@@ -17,7 +17,7 @@ class DragonApi:
         self.table = table
         self.validators = validators
 
-    def get_dragons(self, query_params:  Union[dict, None]) -> dict:
+    def get_dragons(self, query_params: Union[dict, None]) -> dict:
         """
         Get all dragons from db. User can paginate query using LastEvaluatedKey which
         equal the last dragon_id in query. Filter dragons using field "breed".

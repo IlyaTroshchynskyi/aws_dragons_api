@@ -1,20 +1,11 @@
 import json
 import logging
-import os
-
-import boto3
 
 from api import DragonApi
+from utils import get_dynamodb_table
 from validators import DragonValidator
 
-
-if int(os.environ.get("AWS_SAM_LOCAL", "")):
-    ddb = boto3.resource(
-        "dynamodb", endpoint_url=os.environ.get("DYNAMODB_ENDPOINT", "test")
-    )
-else:
-    ddb = boto3.resource("dynamodb")
-table = ddb.Table(os.environ["TABLE_NAME"])
+table = get_dynamodb_table()
 
 logger = logging.getLogger(__name__)
 logger.setLevel("DEBUG")

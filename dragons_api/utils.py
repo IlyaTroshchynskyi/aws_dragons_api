@@ -1,5 +1,9 @@
 import json
+import os
 from decimal import Decimal
+
+import boto3
+from botocore.config import Config
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -26,8 +30,8 @@ def get_update_params(data: dict) -> tuple:
     and ExpressionAttributeNames respectively.
     """
     update_expression = []
-    attribute_values = dict()
-    attribute_names = dict()
+    attribute_values = {}
+    attribute_names = {}
 
     for key, value in data.items():
         update_expression.append(f" #{key.lower()} = :{key.lower()}")
@@ -35,3 +39,36 @@ def get_update_params(data: dict) -> tuple:
         attribute_names[f"#{key.lower()}"] = key.lower()
 
     return "set " + ", ".join(update_expression), attribute_values, attribute_names
+
+
+def get_s3_client():
+    """
+    Initializes s3 client
+    """
+    if int(os.environ.get("AWS_SAM_LOCAL", "")):
+        s3_client = boto3.client(
+            "s3",
+            endpoint_url=os.environ.get("AWS_S3_ENDPOINT_URL", ""),
+            config=Config(signature_version="s3v4"),
+            aws_access_key_id=os.environ.get("ACCESS_KEY_ID", ""),
+            aws_secret_access_key=os.environ.get("SECRET_ACCESS_KEY", ""),
+        )
+    else:
+        s3_client = boto3.client("s3", config=Config(signature_version="s3v4"))
+    return s3_client
+
+
+def get_dynamodb_table():
+    """
+    Initializes dynamodb table
+    """
+    if int(os.environ.get("AWS_SAM_LOCAL", "")):
+        ddb = boto3.resource(
+            "dynamodb",
+            endpoint_url=os.environ.get("DYNAMODB_ENDPOINT", "test"),
+        )
+    else:
+        ddb = boto3.resource("dynamodb")
+
+    table = ddb.Table(os.environ["TABLE_NAME"])
+    return table
