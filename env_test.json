@@ -23,11 +23,20 @@
   "DynamoDbStreamEventCreator": {
     "EVENT_BRIDGE_ENDPOINT": "http://event:5000",
     "SOURCE": "DynamoDbStreamEventCreator",
-    "EVENT_BUS_NAME": "test_event_bus"
+    "EVENT_BUS_NAME": "test_event_bus",
+    "SOURCE_DANGER_DRAGON": "NotifyAboutDangerousDragon"
   },
   "EventBridgeHandler": {
     "DYNAMODB_ENDPOINT": "http://dynamodb:8000",
     "STATISTICS_TABLE_NAME": "dragon_statistics_test_table",
     "TIME_TO_LIVE": 0.001
+  },
+  "GenerateReport": {
+    "DYNAMODB_ENDPOINT": "http://dynamodb:8000",
+    "AWS_S3_ENDPOINT_URL": "http://s3:9000",
+    "ACCESS_KEY_ID": "access_key",
+    "SECRET_ACCESS_KEY": "secret_key",
+    "STATISTICS_TABLE_NAME": "dragon_statistics_test_table",
+    "REPORT_BUCKET_NAME": "dragonsapireporttest"
   }
 }

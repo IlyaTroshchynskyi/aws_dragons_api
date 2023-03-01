@@ -1,4 +1,6 @@
 import os
+import time
+import uuid
 from datetime import datetime
 from pathlib import Path
 
@@ -16,9 +18,11 @@ def env_vars():
         "DYNAMODB_ENDPOINT": "http://127.0.0.1:8000",
         "AWS_S3_BUCKET_NAME": "dragonsapidev",
         "TABLE_NAME": "dragons_test_table",
-        "STATISTICS_TABLE_NAME": "dragon_statistics_test_table",
         "EVENT_BRIDGE_ENDPOINT": "http://localhost:5000",
         "EVENT_BUS_NAME": "test_event_bus",
+        "STATISTICS_TABLE_NAME": "dragon_statistics_test_table",
+        "REPORT_BUCKET_NAME": "dragonsapireporttest",
+        "TIME_TO_LIVE": "0.003",
     }
 
 
@@ -155,3 +159,41 @@ def create_event_bus(env_vars):
     client.create_event_bus(Name=env_vars["EVENT_BUS_NAME"])
     yield
     client.delete_event_bus(Name=env_vars["EVENT_BUS_NAME"])
+
+
+@pytest.fixture(scope="function")
+def fill_statistics_table(dynamo_db_statistics_table, env_vars):
+    for record in range(1, 3):
+        for action in ["INSERT", "MODIFY", "REMOVE"]:
+            data = {
+                "record_id": str(uuid.uuid4()),
+                "dragon_ttl": int(time.time()) + 2,
+                "dragon_action": action,
+            }
+            dynamo_db_statistics_table.put_item(Item=data)
+    dynamo_db_statistics_table.put_item(
+        Item={
+            "record_id": "1",
+            "dragon_ttl": int(time.time()) + 30,
+            "dragon_action": "INSERT",
+        }
+    )
+    yield
+
+
+@pytest.fixture(scope="function")
+def create_delete_bucket(request, base_dir, env_vars):
+
+    s3_client = boto3.client(
+        "s3",
+        endpoint_url=env_vars["AWS_S3_ENDPOINT_URL"],
+        config=Config(signature_version="s3v4"),
+        aws_access_key_id=env_vars["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=env_vars["AWS_SECRET_ACCESS_KEY"],
+    )
+    bucket_name = request.param
+    s3_client.create_bucket(ACL="public-read", Bucket=bucket_name)
+    yield s3_client
+    file_name = s3_client.list_objects(Bucket=bucket_name)["Contents"][0]["Key"]
+    s3_client.delete_object(Bucket=bucket_name, Key=file_name)
+    s3_client.delete_bucket(Bucket=bucket_name)
