@@ -1,8 +1,6 @@
 import json
 import os
 from urllib.parse import urlparse, parse_qs
-
-
 import requests
 from .utils import create_invoke_command
 
