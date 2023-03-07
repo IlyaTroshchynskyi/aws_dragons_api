@@ -92,3 +92,29 @@ def get_event_client():
     else:
         client = boto3.client("events")
     return client
+
+
+def get_sns_client():
+    """
+    Initializes sns client
+    """
+    if is_develop():
+        sns_client = boto3.client(
+            "sns", endpoint_url=os.environ.get("SNS_TOPIC_ENDPOINT")
+        )
+    else:
+        sns_client = boto3.client("sns")
+    return sns_client
+
+
+def is_danger_rating_changed(data: dict) -> bool:
+    """
+    Compare old and new danger rating
+    """
+    new_danger_rating = (
+        data.get("dynamodb").get("NewImage").get("danger_rating").get("N")
+    )
+    old_danger_rating = (
+        data.get("dynamodb").get("OldImage", {}).get("danger_rating", {}).get("N", "-")
+    )
+    return not new_danger_rating == old_danger_rating

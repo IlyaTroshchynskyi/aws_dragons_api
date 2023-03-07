@@ -24,10 +24,8 @@ services:
   event:
     image: motoserver/moto
     restart: always
-    environment:
-      - MOTO_SERVICE=events
     ports:
-      - "5001:5000"
+      - "5000:5000"
     networks:
       - dragons
 

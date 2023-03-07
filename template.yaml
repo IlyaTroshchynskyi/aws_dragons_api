@@ -11,7 +11,6 @@ Globals:
     MemorySize: 128
     Tracing: Active
     Environment:
-
       Variables:
         AWS_SAM_LOCAL: prod
 #  All Lambda instances are set to UTC timezone.
@@ -53,7 +52,7 @@ Resources:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
       StreamSpecification:
-        StreamViewType: KEYS_ONLY
+        StreamViewType: NEW_AND_OLD_IMAGES
 
   StatisticsDragonTable:
     Type: AWS::DynamoDB::Table
@@ -287,8 +286,8 @@ Resources:
         Variables:
           EVENT_BRIDGE_ENDPOINT: url
           SOURCE: "DynamoDbStreamEventCreator"
+          SOURCE_DANGER_DRAGON: "NotifyAboutDangerousDragon"
           EVENT_BUS_NAME: !Ref DragonEventBus
-          SOURCE_DANGER_DRAGON: NotifyAboutDangerousDragon
 
       Policies:
         - DynamoDBStreamReadPolicy:
@@ -389,6 +388,55 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
 
+# Dangerous dragon ==========================================================
+  DangerousDragonEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventBusName: !Ref DragonEventBus
+      Name: DangerousDragonRule
+      EventPattern:
+        source:
+          - NotifyAboutDangerousDragon
+        detail:
+          danger_rating:
+            - {"numeric": [">", 6]}
+      Targets:
+          - Arn: !GetAtt NotifyAboutDangerousDragon.Arn
+            Id: !Ref NotifyAboutDangerousDragon
+
+  NotifyAboutDangerousDragon:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dragons_api/
+      Handler: dangerous_dragon.lambda_handler
+      Runtime: python3.9
+      Layers:
+        - !Ref MyLayer
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !Ref DangerousDragonTopic
+          SNS_TOPIC_ENDPOINT: url
+
+      Policies:
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt DangerousDragonTopic.TopicName
+
+  DangerousDragonEventRulePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref NotifyAboutDangerousDragon
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt DangerousDragonEventRule.Arn
+
+  DangerousDragonTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: DangerousDragon
+      Subscription:
+        - Endpoint: test@rambler.ua
+          Protocol: email
+      TopicName: DangerousDragon
 
 Outputs:
   DragonFunction:

@@ -11,7 +11,7 @@ def test_dynamodb_stream_event_creator(create_event_bus, base_dir):
     data = json.loads(response.read())
     body = json.loads(data.get("body"))
     assert data.get("statusCode") == 200
-    assert body.get("response").get("FailedEntryCount") == 0
+    assert body.get("response") == "Events were send"
 
 
 def test_handler_event_bridge(dynamo_db_statistics_table, base_dir, env_vars):

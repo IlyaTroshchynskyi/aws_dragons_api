@@ -20,7 +20,9 @@ def lambda_handler(event: dict, context) -> dict:
     ttl does not work straightaway. This feature can delete records through some time.
     """
     logger.debug(event)
+    logger.debug(int(time.time()))
     dragon_ttl = int(float(os.environ.get("TIME_TO_LIVE")) * 60 * 60) + int(time.time())
+    logger.debug(dragon_ttl)
     records = event.get("detail").get("Records")
     for record in records:
         event_name = record.get("eventName")

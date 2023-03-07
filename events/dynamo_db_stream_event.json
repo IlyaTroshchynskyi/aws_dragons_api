@@ -8,8 +8,13 @@
       "awsRegion": "us-east-1",
       "dynamodb": {
         "Keys": {
-          "Id": {
-            "N": "101"
+          "dragon_id": {
+            "S": "101"
+          }
+        },
+        "NewImage":{
+          "danger_rating":{
+            "N":"8"
           }
         },
         "ApproximateCreationDateTime": 1428537600,
@@ -27,8 +32,18 @@
       "awsRegion": "us-east-1",
       "dynamodb": {
         "Keys": {
-          "Id": {
-            "N": "101"
+          "dragon_id": {
+            "S": "102"
+          }
+        },
+        "NewImage":{
+          "danger_rating":{
+            "N":"8"
+          }
+        },
+        "OldImage":{
+          "danger_rating":{
+            "N":"7"
           }
         },
         "ApproximateCreationDateTime": 1428537600,
@@ -46,8 +61,13 @@
       "awsRegion": "us-east-1",
       "dynamodb": {
         "Keys": {
-          "Id": {
-            "N": "101"
+          "dragon_id": {
+            "S": "103"
+          }
+        },
+        "OldImage":{
+          "danger_rating":{
+            "N":"8"
           }
         },
         "ApproximateCreationDateTime": 1428537600,
