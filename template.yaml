@@ -10,22 +10,83 @@ Globals:
     Timeout: 3
     MemorySize: 128
     Tracing: Active
+    CodeUri: dragons_api/
+    Runtime: python3.9
+    Architectures:
+      - x86_64
+    Layers:
+      - !Ref MyLayer
     Environment:
       Variables:
         AWS_SAM_LOCAL: prod
-#  All Lambda instances are set to UTC timezone.
-#  Incase you want to change that behavior you need to update environment variable.
-        TZ: EET
 
   Api:
     TracingEnabled: true
+
+Parameters:
+  DragonsBucketParam:
+    Type: String
+    Default: dragonsapi
+    Description: Bucket name for uploading dragons in csv file
+  ReportBucketParam:
+    Type: String
+    Default: dragonsapireport
+    Description: Bucket name for dragon operations statistics report
+  DragonTableParam:
+    Type: String
+    Default: dragons
+    Description: Table name where users store their dragons
+  StatisticsDragonTableParam:
+    Type: String
+    Default: dragon_statistics
+    Description: Table name for storing stream statistics
+  UserPoolParam:
+    Type: String
+    Default: DragonUserPool
+    Description: User pool name in cognito resource
+  DragonUserPoolDomainParam:
+    Type: String
+    Default: dragon-domain
+    Description: Domain name in Cognito resource
+  DragonEventBusParam:
+    Type: String
+    Default: DragonsEventBus
+    Description: Name of EventBus for Event bridge rules
+  DragonEventBusRuleStreamParam:
+    Type: String
+    Default: DragonsEventsStreamRule
+    Description: Name of EventBridge rule for handling stream event
+  DragonScheduleEventRuleParam:
+    Type: String
+    Default: DragonsDailyStatistics
+    Description: Name of EventBridge rule of cron event
+  DragonsUserPoolClientParam:
+    Type: String
+    Default: DragonsUserPoolClient
+    Description: Name of User Pool Client in Cognito resource
+  DangerousDragonEventRuleParam:
+    Type: String
+    Default: DangerousDragonRule
+    Description: Name of EventBridge rule of handling event with dangerous dragon
+  DangerousDragonTopicParam:
+    Type: String
+    Default: DangerousDragon
+    Description: Name of SNS topic
+  DynamoDbStreamEventCreatorParam:
+    Type: String
+    Default: DynamoDbStreamEventCreator
+    Description: Name of Source. It is used in Event bridge rule
+  NotifyAboutDangerousDragonParam:
+    Type: String
+    Default: NotifyAboutDangerousDragon
+    Description: Name of Source. It is used in Event bridge rule
 
 Resources:
 
   Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: dragonsapi
+      BucketName: !Ref DragonsBucketParam
       AccessControl: Private
       VersioningConfiguration:
         Status: Enabled
@@ -33,7 +94,7 @@ Resources:
   ReportBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: dragonsapireport
+      BucketName: !Ref ReportBucketParam
       AccessControl: Private
       VersioningConfiguration:
         Status: Enabled
@@ -41,7 +102,7 @@ Resources:
   DragonTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: "dragons"
+      TableName: !Ref DragonTableParam
       AttributeDefinitions:
         - AttributeName: "dragon_id"
           AttributeType: "S"
@@ -57,7 +118,7 @@ Resources:
   StatisticsDragonTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: "dragon_statistics"
+      TableName: !Ref StatisticsDragonTableParam
       AttributeDefinitions:
         - AttributeName: "record_id"
           AttributeType: "S"
@@ -76,7 +137,7 @@ Resources:
     Properties:
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: false
-      UserPoolName: DragonUserPool
+      UserPoolName: !Ref UserPoolParam
       UsernameAttributes:
         - email
       AutoVerifiedAttributes:
@@ -102,7 +163,7 @@ Resources:
     Type: AWS::Cognito::UserPoolClient
     Properties:
       UserPoolId: !Ref UserPool
-      ClientName: DragonsUserPoolClient
+      ClientName: !Ref DragonsUserPoolClientParam
       GenerateSecret: false # Boolean to specify whether you want to generate a secret for the user pool client being created.
       SupportedIdentityProviders:
         - COGNITO
@@ -122,7 +183,7 @@ Resources:
   DragonUserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
-      Domain: dragon-domain
+      Domain: !Ref DragonUserPoolDomainParam
       UserPoolId:  !Ref UserPool
 
   MyLayer:
@@ -153,18 +214,11 @@ Resources:
   DragonFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dragons_api/
       Handler: app.lambda_handler
-      Runtime: python3.9
-      Architectures:
-      - x86_64
-      Layers:
-        - !Ref MyLayer
       Environment:
         Variables:
           DYNAMODB_ENDPOINT: url
           TABLE_NAME: !Ref DragonTable
-
       Events:
         ListDragons:
           Type: Api
@@ -214,20 +268,16 @@ Resources:
   GeneratePresignedUrl:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dragons_api/
       Handler: generate_url.lambda_handler
-      Runtime: python3.9
-      Layers:
-        - !Ref MyLayer
       Environment:
         Variables:
-          AWS_S3_ENDPOINT_URL: http://s3:9000
+          AWS_S3_ENDPOINT_URL: url
           ACCESS_KEY_ID: access_key
           SECRET_ACCESS_KEY: secret_key
-          AWS_S3_BUCKET_NAME: dragonsapi
+          AWS_S3_BUCKET_NAME: !Ref DragonsBucketParam
       Policies:
         - S3WritePolicy:
-             BucketName: dragonsapi
+             BucketName: !Ref DragonsBucketParam
       Events:
         GenerateUrl:
           Type: Api
@@ -241,26 +291,20 @@ Resources:
   UploadDragonsToDynamoDb:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dragons_api/
       Handler: upload_to_db.lambda_handler
-      Runtime: python3.9
-      Layers:
-        - !Ref MyLayer
       Environment:
         Variables:
-          AWS_S3_ENDPOINT_URL: http://s3:9000
+          AWS_S3_ENDPOINT_URL: url
           ACCESS_KEY_ID: access_key
           SECRET_ACCESS_KEY: secret_key
-          AWS_S3_BUCKET_NAME: dragonsapi
+          AWS_S3_BUCKET_NAME: !Ref DragonsBucketParam
           DYNAMODB_ENDPOINT: url
           TABLE_NAME: !Ref DragonTable
-
       Policies:
         - S3ReadPolicy:
-            BucketName: dragonsapi
+            BucketName: !Ref DragonsBucketParam
         - DynamoDBWritePolicy:
             TableName: !Ref DragonTable
-
       Events:
         FileUpload:
           Type: S3
@@ -277,25 +321,19 @@ Resources:
   DynamoDbStreamEventCreator:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dragons_api/
       Handler: dynamodb_stream_event.lambda_handler
-      Runtime: python3.9
-      Layers:
-        - !Ref MyLayer
       Environment:
         Variables:
           EVENT_BRIDGE_ENDPOINT: url
-          SOURCE: "DynamoDbStreamEventCreator"
-          SOURCE_DANGER_DRAGON: "NotifyAboutDangerousDragon"
+          SOURCE_STREAM_HANDLER: !Ref DynamoDbStreamEventCreatorParam
+          SOURCE_DANGER_DRAGON: !Ref NotifyAboutDangerousDragonParam
           EVENT_BUS_NAME: !Ref DragonEventBus
-
       Policies:
         - DynamoDBStreamReadPolicy:
             TableName: !Ref DragonTable
             StreamName: !GetAtt DragonTable.StreamArn
         - EventBridgePutEventsPolicy:
             EventBusName: !Ref DragonEventBus
-
       Events:
         DynamoDbStream:
           Type: DynamoDB
@@ -306,16 +344,16 @@ Resources:
   DragonEventBus:
     Type: AWS::Events::EventBus
     Properties:
-      Name: "DragonsEventBus"
+      Name: !Ref DragonEventBusParam
 
   DragonEventBusRule:
     Type: AWS::Events::Rule
     Properties:
       EventBusName: !Ref DragonEventBus
-      Name: DragonsEventsRule
+      Name: !Ref DragonEventBusRuleStreamParam
       EventPattern:
         source:
-          - DynamoDbStreamEventCreator
+          -  !Ref DynamoDbStreamEventCreatorParam
       Targets:
           - Arn: !GetAtt EventBridgeHandler.Arn
             Id: !Ref EventBridgeHandler
@@ -334,17 +372,12 @@ Resources:
   EventBridgeHandler:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dragons_api/
       Handler: handler_event_bridge.lambda_handler
-      Runtime: python3.9
-      Layers:
-        - !Ref MyLayer
       Environment:
         Variables:
           DYNAMODB_ENDPOINT: url
           STATISTICS_TABLE_NAME: !Ref StatisticsDragonTable
           TIME_TO_LIVE: 24
-
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref StatisticsDragonTable
@@ -352,11 +385,7 @@ Resources:
   GenerateReport:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dragons_api/
       Handler: generate_report.lambda_handler
-      Runtime: python3.9
-      Layers:
-        - !Ref MyLayer
       Environment:
         Variables:
           DYNAMODB_ENDPOINT: url
@@ -365,7 +394,6 @@ Resources:
           AWS_S3_ENDPOINT_URL: url
           ACCESS_KEY_ID: access_key
           SECRET_ACCESS_KEY: secret_key
-
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref StatisticsDragonTable
@@ -375,7 +403,7 @@ Resources:
   DragonScheduleEventRule:
     Type: AWS::Events::Rule
     Properties:
-      Name: DragonsDailyStatistics
+      Name: !Ref DragonScheduleEventRuleParam
       ScheduleExpression:  "cron(0 0 * * ? *)"
       Targets:
         - Arn: !GetAtt GenerateReport.Arn
@@ -393,10 +421,10 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       EventBusName: !Ref DragonEventBus
-      Name: DangerousDragonRule
+      Name: !Ref DangerousDragonEventRuleParam
       EventPattern:
         source:
-          - NotifyAboutDangerousDragon
+          - !Ref NotifyAboutDangerousDragonParam
         detail:
           danger_rating:
             - {"numeric": [">", 6]}
@@ -407,16 +435,11 @@ Resources:
   NotifyAboutDangerousDragon:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dragons_api/
       Handler: dangerous_dragon.lambda_handler
-      Runtime: python3.9
-      Layers:
-        - !Ref MyLayer
       Environment:
         Variables:
           SNS_TOPIC_ARN: !Ref DangerousDragonTopic
           SNS_TOPIC_ENDPOINT: url
-
       Policies:
         - SNSPublishMessagePolicy:
             TopicName: !GetAtt DangerousDragonTopic.TopicName
@@ -432,11 +455,11 @@ Resources:
   DangerousDragonTopic:
     Type: AWS::SNS::Topic
     Properties:
-      DisplayName: DangerousDragon
+      DisplayName: !Ref DangerousDragonTopicParam
       Subscription:
-        - Endpoint: test@rambler.ua
+        - Endpoint: '{{resolve:ssm:email:1}}'
           Protocol: email
-      TopicName: DangerousDragon
+      TopicName: !Ref DangerousDragonTopicParam
 
 Outputs:
   DragonFunction:
@@ -445,7 +468,3 @@ Outputs:
   DragonFunctionIamRole:
     Description: "Implicit IAM Role created for Dragon function"
     Value: !GetAtt DragonFunctionRole.Arn
-
-  EventBusRef:
-    Description: "Check Event bus"
-    Value: !Ref DragonEventBus

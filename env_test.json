@@ -22,7 +22,7 @@
   },
   "DynamoDbStreamEventCreator": {
     "EVENT_BRIDGE_ENDPOINT": "http://event:5000",
-    "SOURCE": "DynamoDbStreamEventCreator",
+    "SOURCE_STREAM_HANDLER": "DynamoDbStreamEventCreator",
     "EVENT_BUS_NAME": "test_event_bus",
     "SOURCE_DANGER_DRAGON": "NotifyAboutDangerousDragon"
   },

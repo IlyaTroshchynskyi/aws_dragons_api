@@ -25,7 +25,7 @@ def lambda_handler(event, context) -> dict:
     logger.debug(event)
     entry = {
         "Time": datetime.now(),
-        "Source": os.environ.get("SOURCE"),
+        "Source": os.environ.get("SOURCE_STREAM_HANDLER"),
         "DetailType": "Dynamodb stream data",
         "Detail": json.dumps(event),
         "EventBusName": os.environ.get("EVENT_BUS_NAME"),
