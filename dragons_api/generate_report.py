@@ -26,7 +26,7 @@ def lambda_handler(event: dict, context) -> dict:
     Therefore, we have a condition for filtering based on the current time.
     """
     statistics = {"INSERT": 0, "MODIFY": 0, "REMOVE": 0}
-    filter_expr = Attr("dragon_ttl").lte(int(time.time()))
+    filter_expr = Attr("dragon_ttl").gte(int(time.time()))
     response = table.scan(Limit=2, FilterExpression=filter_expr)
     data = response["Items"]
     while "LastEvaluatedKey" in response:

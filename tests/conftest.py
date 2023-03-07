@@ -23,6 +23,8 @@ def env_vars():
         "STATISTICS_TABLE_NAME": "dragon_statistics_test_table",
         "REPORT_BUCKET_NAME": "dragonsapireporttest",
         "TIME_TO_LIVE": "0.003",
+        "SNS_TOPIC_ENDPOINT": "http://localhost:5000",
+        "SNS_TOPIC_ARN": "arn:aws:sns:us-east-1:123456789012:DangerousDragonTest",
     }
 
 
@@ -167,14 +169,14 @@ def fill_statistics_table(dynamo_db_statistics_table, env_vars):
         for action in ["INSERT", "MODIFY", "REMOVE"]:
             data = {
                 "record_id": str(uuid.uuid4()),
-                "dragon_ttl": int(time.time()) + 2,
+                "dragon_ttl": int(time.time()) + 30,
                 "dragon_action": action,
             }
             dynamo_db_statistics_table.put_item(Item=data)
     dynamo_db_statistics_table.put_item(
         Item={
             "record_id": "1",
-            "dragon_ttl": int(time.time()) + 30,
+            "dragon_ttl": int(time.time()) - 30,
             "dragon_action": "INSERT",
         }
     )
@@ -197,3 +199,11 @@ def create_delete_bucket(request, base_dir, env_vars):
     file_name = s3_client.list_objects(Bucket=bucket_name)["Contents"][0]["Key"]
     s3_client.delete_object(Bucket=bucket_name, Key=file_name)
     s3_client.delete_bucket(Bucket=bucket_name)
+
+
+@pytest.fixture(scope="function")
+def create_sns_topic(env_vars):
+    client = boto3.client("sns", endpoint_url=env_vars["SNS_TOPIC_ENDPOINT"])
+    response = client.create_topic(Name="DangerousDragonTest")
+    yield
+    client.delete_topic(TopicArn=response["TopicArn"])

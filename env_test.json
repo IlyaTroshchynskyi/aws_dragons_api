@@ -38,5 +38,9 @@
     "SECRET_ACCESS_KEY": "secret_key",
     "STATISTICS_TABLE_NAME": "dragon_statistics_test_table",
     "REPORT_BUCKET_NAME": "dragonsapireporttest"
+  },
+  "NotifyAboutDangerousDragon": {
+    "SNS_TOPIC_ARN": "arn:aws:sns:us-east-1:123456789012:DangerousDragonTest",
+    "SNS_TOPIC_ENDPOINT": "http://event:5000"
   }
 }
