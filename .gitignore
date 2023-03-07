@@ -4,5 +4,4 @@ __pycache__
 .aws-sam
 venv
 Makefile
-volume
-test.drawio
+dragons_api.drawio

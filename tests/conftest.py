@@ -24,7 +24,7 @@ def env_vars():
         "REPORT_BUCKET_NAME": "dragonsapireporttest",
         "TIME_TO_LIVE": "0.003",
         "SNS_TOPIC_ENDPOINT": "http://localhost:5000",
-        "SNS_TOPIC_ARN": "arn:aws:sns:us-east-1:123456789012:DangerousDragonTest",
+        "SNS_TOPIC_ARN": "arn:aws:sns:us-east-1:123456789012:DangerousDragonTest"
     }
 
 

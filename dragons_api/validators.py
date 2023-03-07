@@ -1,5 +1,4 @@
 from typing import Union, List
-from typing import Union
 
 
 class DragonValidator:
