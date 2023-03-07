@@ -1,0 +1,16 @@
+{
+   "version":"0",
+   "id":"a8ceb905-0b51-7ac8-ca15-2fbaf352e5dc",
+   "detail-type":"Dynamodb stream data",
+   "source":"NotifyAboutDangerousDragon",
+   "account":"682434306449",
+   "time":"2023-02-07T18:47:21Z",
+   "region":"us-east-1",
+   "resources":[
+
+   ],
+   "detail":{
+     "dragon_id": "1",
+     "danger_rating":10
+   }
+}

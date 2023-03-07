@@ -1,0 +1,34 @@
+{
+   "resource":"/dragons/{dragon_id}",
+   "path":"/dragons/1",
+   "httpMethod":"DELETE",
+   "queryStringParameters":"None",
+   "multiValueQueryStringParameters":"None",
+   "pathParameters": {"dragon_id": "2"},
+   "stageVariables":"None",
+   "requestContext":{
+      "resourceId":"rix4v2",
+      "authorizer":{
+         "claims":{
+            "at_hash":"Rb3_Xy87PZyd4f_k72FwEQ",
+            "sub":"1",
+            "email_verified":"true",
+            "iss":"https://cognito-idp.us-east-1.amazonaws.com/us-east-1_wDKhvKma3",
+            "cognito:username":"aa51f002-14f7-407b-b0cd-fb4ec1a78640",
+            "aud":"5u8l1l94qqhspqvp",
+            "event_id":"6c358b39-4f73-40dc-9e95-c37b9f47f01d",
+            "token_use":"id",
+            "auth_time":"1674643640",
+            "exp":"Wed Jan 25 11:47:20 UTC 2023",
+            "iat":"Wed Jan 25 10:47:20 UTC 2023",
+            "jti":"bd5913fa-2288-44b2-9a69-baeae714ba62",
+            "email":"test@mail.ua"
+         }
+      },
+      "resourcePath":"/dragons/{dragon_id}",
+      "httpMethod":"DELETE",
+      "path":"/Prod/dragons"
+   },
+   "body":"None",
+   "isBase64Encoded":false
+}

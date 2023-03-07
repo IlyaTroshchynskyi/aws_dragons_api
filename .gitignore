@@ -2,3 +2,6 @@
 .pytest_cache
 __pycache__
 .aws-sam
+venv
+Makefile
+dragons_api.drawio

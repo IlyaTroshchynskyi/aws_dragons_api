@@ -1,0 +1,38 @@
+services:
+
+  dynamodb:
+    image: amazon/dynamodb-local:1.20.0
+    networks:
+      - dragons
+    ports:
+      - "8000:8000"
+
+  s3:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio:/data
+    environment:
+      - MINIO_ROOT_USER=access_key
+      - MINIO_ROOT_PASSWORD=secret_key
+    networks:
+      - dragons
+    command: server /data --console-address ":9001"
+
+  event:
+    image: motoserver/moto
+    restart: always
+    ports:
+      - "5000:5000"
+    networks:
+      - dragons
+
+networks:
+  dragons:
+    driver: bridge
+    name: dragons
+
+volumes:
+  minio:
