@@ -3,5 +3,11 @@
 __pycache__
 .aws-sam
 venv
-Makefile
+terraform_instructure/Makefile
 dragons_api.drawio
+terraform_instructure/.terraform
+for_test.py
+*.zip
+terraform_instructure/lambda_outputs
+lambda_layer
+creds.txt

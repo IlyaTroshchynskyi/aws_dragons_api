@@ -1,0 +1,3 @@
+bucket         = "my-test-tf-state1"
+key            = "orders-dev.tfstate"
+region         = "eu-central-1"

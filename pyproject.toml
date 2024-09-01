@@ -1,7 +1,15 @@
-[tool.black]
-line-length = 88
-target-version = ["py39"]
-exclude = """__pycache__|migrations|env|.aws-sam"""
-diff = 0
-color = 1
-check = 0
+[tool.poetry]
+name = "aws-dragons-api"
+version = "0.1.0"
+description = ""
+authors = ["Illia Troshchynskyi <illia.troshchynskyi@nixs.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+boto3 = "^1.35.5"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
