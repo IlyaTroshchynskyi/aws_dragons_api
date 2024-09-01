@@ -18,6 +18,7 @@ def lambda_handler(event, context) -> dict:
     account upload a file to a bucket.
     Url should looks like http:domain/generate_url?file_name=<your file name>
     """
+    logger.info(event)
     if file := event.get("queryStringParameters"):
         file_name = file.get("file_name")
     else:
